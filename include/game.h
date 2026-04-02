@@ -9,6 +9,7 @@
 #include "food.h"
 
 typedef struct{
+    uint16_t score_;
     bool gameover_;
     rng_t r_;
     map_t m_;

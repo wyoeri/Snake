@@ -1,5 +1,7 @@
 #include "snake.h"
 
+#include "curses_wrapper.h"
+
 // snake initialization
 void initSnake(stateSnake *state_snake, const startSnakePosition *start_snake){
     if(!state_snake || !start_snake){return;}

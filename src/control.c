@@ -1,5 +1,7 @@
 #include "control.h"
 
+#include "curses_wrapper.h"
+
 // input initialisation
 userAction inputUserAction(int ch){
     switch(ch){

@@ -16,5 +16,5 @@ uint32_t rngNext(rng_t *r){
 
 // generation of the random number in specified range
 uint32_t rngRange(rng_t *r, uint32_t min, uint32_t max){
-    return min + (rng_next(r) % (max - min + 1));
+    return min + (rngNext(r) % (max - min + 1));
 }

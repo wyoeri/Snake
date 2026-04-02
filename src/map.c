@@ -1,5 +1,8 @@
 #include "map.h"
 
+#include <stddef.h>
+#include "curses_wrapper.h"
+
 // map initialisation
 void mapInitialisation(map_t *map){
     for(size_t i = 0; i < HEIGHT_MAP; i++){

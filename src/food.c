@@ -1,5 +1,7 @@
 #include "food.h"
 
+#include "curses_wrapper.h"
+
 // the control function for coordinate generation and food rendering
 food_position spawnFood(rng_t *rng, uint32_t minX, uint32_t maxX, uint32_t minY, uint32_t maxY){
     food_position food_pos;
@@ -19,9 +21,9 @@ void drawFood(const food_position *food_pos){
 
 // generation of food coordinates
 uint32_t genFoodX(rng_t *rng, uint32_t min, uint32_t max){
-    return rng_range(rng, min, max);
+    return rngRange(rng, min, max);
 }
 
 uint32_t genFoodY(rng_t *rng, uint32_t min, uint32_t max){
-    return rng_range(rng, min, max);
+    return rngRange(rng, min, max);
 }
