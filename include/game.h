@@ -6,6 +6,7 @@
 #include "map.h"
 #include "snake.h"
 #include "control.h"
+#include "food.h"
 
 typedef struct{
     bool gameover_;

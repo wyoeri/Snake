@@ -1,7 +1,6 @@
 #include "game.h"
 
 #include <time.h>
-#include "food.h"
 #include "utils.h"
 
 // main game loop 

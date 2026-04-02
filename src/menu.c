@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include "utils.h"
 #include "version.h"
+#include "game.h"
 
 // menu cycle
 void run_menu(display_menu_text_fun display_menu_text, select_menu_items_fun select_menu_items){
@@ -39,13 +40,18 @@ void main_menu(void){
 
 void output_main_menu(void){
     printf("%sSnake%s\n", BOLD_TEXT, RESET_TEXT);
-    printf("1. Help\n");
+    printf("1. Start\n");
+    printf("2. Help\n");
     printf("0. Exit the game\n");
 }
 
 void choice_main_menu(int choice){
     switch(choice){
         case 1:{
+            gameLoop();
+            break;
+        }
+        case 2:{
             help_menu();
             break;
         }
