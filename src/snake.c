@@ -4,8 +4,8 @@
 void initSnake(stateSnake *state_snake, const startSnakePosition *start_snake){
     if(!state_snake || !start_snake){return;}
     state_snake->sizeSnake_ = 1;
-    state_snake->snakeX_[0] = start_snake->startX_;
-    state_snake->snakeY_[0] = start_snake->startY_;
+    state_snake->snakeX_[0] = start_snake->startSnakeX_;
+    state_snake->snakeY_[0] = start_snake->startSnakeY_;
 }
 
 // drawing a snake

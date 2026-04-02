@@ -5,8 +5,8 @@
 
 // the starting coordinates of the snake
 typedef struct{
-    uint8_t startX_;
-    uint8_t startY_;
+    uint8_t startSnakeX_;
+    uint8_t startSnakeY_;
 } startSnakePosition;
 
 typedef struct{
