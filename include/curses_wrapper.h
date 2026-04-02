@@ -7,4 +7,10 @@
     #include "ncurses.h"
 #endif
 
+/*
+    initialising the ncurses library 
+    and configuring the terminal settings for the game 
+*/
+void setupTerminal(void);
+
 #endif

@@ -30,7 +30,10 @@ void gameLoop(void){
 
         updateDir(&state_game.uad_, state_game.ua_);
 
-        checkCollidedSnakeWall(&state_game);
+        if(!checkCollidedSnakeWall(&state_game)){
+            state_game.gameover_ = true;
+            break;
+        }
 
         uint8_t snakeTailY_ = state_game.ss_.snakeY_[state_game.ss_.sizeSnake_ - 1];
         uint8_t snakeTailX_ = state_game.ss_.snakeX_[state_game.ss_.sizeSnake_ - 1];
@@ -49,19 +52,23 @@ void gameLoop(void){
         drawFood(&state_game.fp_);
 
         refresh();
-        usleep(100000);
     }
 }
 
 // initialisation of the game's starting state
 void initGame(stateGame *state_game){
-    state_game->score_ = 0;
-    state_game->gameover_ = false;
+    setupTerminal();
+
     rngSeed(&state_game->r_, (uint32_t)time(NULL));
+
     mapInitialisation(&state_game->m_);
+
     state_game->ssp_.startSnakeX_ = 15;
     state_game->ssp_.startSnakeY_ = 15;
     initSnake(&state_game->ss_, &state_game->ssp_);
+
+    state_game->score_ = 0;
+    state_game->gameover_ = false;
 }
 
 // checking whether the snake has collided with the wall
