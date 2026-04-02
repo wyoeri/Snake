@@ -8,6 +8,8 @@
 #include "control.h"
 #include "food.h"
 
+#define VALUETIMEOUT 150
+
 typedef struct{
     uint16_t score_;
     bool gameover_;

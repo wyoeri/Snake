@@ -1,6 +1,7 @@
 #include "game.h"
 
 #include <time.h>
+#include <memory.h>
 #include <unistd.h>
 #include "utils.h"
 #include "curses_wrapper.h"
@@ -13,9 +14,7 @@ void gameLoop(void){
     drawMap(&state_game.m_);
     state_game.fp_ = spawnFood(&state_game.r_, 1, 48, 1, 23);
 
-    state_game.uad_ = RIGHT;
-
-    timeout(100);
+    timeout(VALUETIMEOUT);
 
     while(!state_game.gameover_){
         drawSnake(&state_game.ss_);
@@ -30,7 +29,7 @@ void gameLoop(void){
 
         updateDir(&state_game.uad_, state_game.ua_);
 
-        if(!checkCollidedSnakeWall(&state_game)){
+        if(checkCollidedSnakeWall(&state_game)){
             state_game.gameover_ = true;
             break;
         }
@@ -51,12 +50,19 @@ void gameLoop(void){
         drawSnake(&state_game.ss_);
         drawFood(&state_game.fp_);
 
+
         refresh();
     }
+    endwin();
+    clear_screen();
 }
 
 // initialisation of the game's starting state
 void initGame(stateGame *state_game){
+    memset(state_game, 0, sizeof(stateGame));
+
+    state_game->uad_ = RIGHT;
+
     setupTerminal();
 
     rngSeed(&state_game->r_, (uint32_t)time(NULL));
