@@ -25,3 +25,8 @@ bool check_number_i(int *x){
 void clear_screen(void){
     printf("\033[2J\033[H");
 }
+
+void clear_buffer(void){
+    int c;
+    while((c = getchar()) != '\n' && c != EOF);
+}
