@@ -3,20 +3,13 @@
 #include "curses_wrapper.h"
 
 // the control function for coordinate generation and food rendering
-food_position spawnFood(rng_t *rng, uint32_t minX, uint32_t maxX, uint32_t minY, uint32_t maxY){
-    food_position food_pos;
+foodPosition spawnFood(rng_t *rng, uint32_t minX, uint32_t maxX, uint32_t minY, uint32_t maxY){
+    foodPosition food_position;
 
-    food_pos.foodX_ = genFoodX(rng, minX, maxX);
-    food_pos.foodY_ = genFoodY(rng, minY, maxY);
+    food_position.foodX_ = (uint8_t)genFoodX(rng, minX, maxX);
+    food_position.foodY_ = (uint8_t)genFoodY(rng, minY, maxY);
 
-    drawFood(&food_pos);
-
-    return food_pos;
-}
-
-// food illustration
-void drawFood(const food_position *food_pos){
-    mvprintw(food_pos->foodY_, food_pos->foodX_, "@");
+    return food_position;
 }
 
 // generation of food coordinates
