@@ -22,18 +22,15 @@ typedef struct{
     uint8_t snakeY_[1280];
 } stateSnake;
 /*
-    an array of 1280 elements, as the map’s area is 1250 (50×25), 
-    plus 30 bytes because this number is a multiple of 16, 32 and 64, 
+    arrays of 1,280 elements, as the map’s area is 1,250 (50×25), 
+    plus 30 bytes, since this number is a multiple of 16, 32 and 64, 
     which makes the processor’s job easier
 */
 
 // snake initialization
 void initSnake(stateSnake *state_snake, const startSnakePosition *start_snake);
 
-// drawing a snake
-void drawSnake(const stateSnake *state_snake);
-
 // the snake's movements
-void moveSnake(stateSnake *ss, userAction ua);
+void moveSnake(stateSnake *state_snake, userAction user_action);
 
 #endif
