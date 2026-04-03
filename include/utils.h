@@ -25,5 +25,6 @@ bool check_number_i(int *x);
 
 // other
 void clear_screen(void);
+void clear_buffer(void);
 
 #endif
