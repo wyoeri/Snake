@@ -1,6 +1,7 @@
 #include "game.h"
 
 #include <time.h>
+#include <memory.h>
 #include <unistd.h>
 #include "utils.h"
 #include "curses_wrapper.h"
@@ -13,9 +14,7 @@ void gameLoop(void){
     drawMap(&state_game.m_);
     state_game.fp_ = spawnFood(&state_game.r_, 1, 48, 1, 23);
 
-    state_game.uad_ = RIGHT;
-
-    timeout(100);
+    timeout(VALUETIMEOUT);
 
     while(!state_game.gameover_){
         drawSnake(&state_game.ss_);
@@ -29,6 +28,11 @@ void gameLoop(void){
         }
 
         updateDir(&state_game.uad_, state_game.ua_);
+
+        if(checkCollidedSnakeWall(&state_game)){
+            state_game.gameover_ = true;
+            break;
+        }
 
         uint8_t snakeTailY_ = state_game.ss_.snakeY_[state_game.ss_.sizeSnake_ - 1];
         uint8_t snakeTailX_ = state_game.ss_.snakeX_[state_game.ss_.sizeSnake_ - 1];
@@ -46,24 +50,41 @@ void gameLoop(void){
         drawSnake(&state_game.ss_);
         drawFood(&state_game.fp_);
 
+
         refresh();
-        usleep(100000);
     }
+    endwin();
+    clear_screen();
 }
 
 // initialisation of the game's starting state
 void initGame(stateGame *state_game){
-    initscr();
-    cbreak();
-    noecho();
-    curs_set(0);
-    keypad(stdscr, TRUE);
+    memset(state_game, 0, sizeof(stateGame));
 
-    state_game->score_ = 0;
-    state_game->gameover_ = false;
+    state_game->uad_ = RIGHT;
+
+    setupTerminal();
+
     rngSeed(&state_game->r_, (uint32_t)time(NULL));
+
     mapInitialisation(&state_game->m_);
+
     state_game->ssp_.startSnakeX_ = 15;
     state_game->ssp_.startSnakeY_ = 15;
     initSnake(&state_game->ss_, &state_game->ssp_);
+
+    state_game->score_ = 0;
+    state_game->gameover_ = false;
+}
+
+// checking whether the snake has collided with the wall
+bool checkCollidedSnakeWall(stateGame *state_game){
+    uint8_t headSnakeX = state_game->ss_.snakeX_[0];
+    uint8_t headSnakeY = state_game->ss_.snakeY_[0];
+
+    if(state_game->m_.map_[headSnakeY][headSnakeX] == 1){
+        return true;
+    }
+
+    return false;
 }
