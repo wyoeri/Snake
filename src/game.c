@@ -5,86 +5,155 @@
 #include <unistd.h>
 #include "utils.h"
 #include "curses_wrapper.h"
+#include "draw.h"
 
 // main game loop 
 void gameLoop(void){
-    stateGame state_game;
+    stateGame game;
 
-    initGame(&state_game);
-    drawMap(&state_game.m_);
-    state_game.fp_ = spawnFood(&state_game.r_, 1, 48, 1, 23);
+    initGame(&game);
+    drawMap(&game.m_);
+    game.food_pos_ = spawnFood(&game.r_, MIN_Y, MAX_Y, MIN_X, MAX_X);
 
-    timeout(VALUETIMEOUT);
+    while(!game.gameover_){
+        drawSnake(&game.state_snake_);
+        drawFood(&game.food_pos_);
 
-    while(!state_game.gameover_){
-        drawSnake(&state_game.ss_);
-        
+        displayScore(&game);
+        displaySizeSnake(&game);
+
         int ch = getch();
-        state_game.ua_ = inputUserAction(ch);
+        game.user_action_ = inputUserAction(ch);
 
-        if(state_game.ua_ == QUIT){
-            state_game.gameover_ = true;
+        if(game.user_action_ == QUIT){
+            game.gameover_ = true;
             break;
         }
 
-        updateDir(&state_game.uad_, state_game.ua_);
+        updateDir(&game.user_action_dir_, game.user_action_);
 
-        if(checkCollidedSnakeWall(&state_game)){
-            state_game.gameover_ = true;
+        // calculating the tail length
+        uint8_t snakeTailY_ = game.state_snake_.snakeY_[game.state_snake_.sizeSnake_ - 1];
+        uint8_t snakeTailX_ = game.state_snake_.snakeX_[game.state_snake_.sizeSnake_ - 1];
+
+        moveSnake(&game.state_snake_, game.user_action_dir_);
+
+        if(checkCollidedSnakeWall(&game) || checkCollidedSnakeHeadBody(&game.state_snake_)){
+            game.gameover_ = true;
             break;
         }
 
-        uint8_t snakeTailY_ = state_game.ss_.snakeY_[state_game.ss_.sizeSnake_ - 1];
-        uint8_t snakeTailX_ = state_game.ss_.snakeX_[state_game.ss_.sizeSnake_ - 1];
-
-        mvaddch(snakeTailY_, snakeTailX_, ' ');
-
-        moveSnake(&state_game.ss_, state_game.uad_);
-
-        if(state_game.ss_.snakeX_[0] == state_game.fp_.foodX_ && state_game.ss_.snakeY_[0] == state_game.fp_.foodY_){
-            state_game.score_ += 10;
-            state_game.fp_ = spawnFood(&state_game.r_, 1, 48, 1, 23);
-            state_game.ss_.sizeSnake_++;
+        /*
+        After the snake moves, its tail leaves the previous cell.
+        If that cell was a wall, redraw the wall ('#'), otherwise clear it (' ').
+        */
+        if(game.m_.map_[snakeTailY_][snakeTailX_] == 1){
+            mvaddch(snakeTailY_, snakeTailX_, '#');    
+        }
+        else{
+            mvaddch(snakeTailY_, snakeTailX_, ' ');
         }
 
-        drawSnake(&state_game.ss_);
-        drawFood(&state_game.fp_);
+        if(checkCollidedSnakeFood(&game) && game.state_snake_.sizeSnake_ < MAX_SIZE_SNAKE){
+            // adding a new segment at the end
+            game.state_snake_.snakeY_[game.state_snake_.sizeSnake_] = snakeTailY_;
+            game.state_snake_.snakeX_[game.state_snake_.sizeSnake_] = snakeTailX_;
 
+            game.state_snake_.sizeSnake_++;
 
+            game.food_pos_ = checkSpawnFoodSnakeBody(&game, &game.state_snake_);
+            game.score_ += 10;
+        }
+
+        // screen refresh(for optimisation, only updated sections are refreshed)
         refresh();
     }
-    endwin();
+    endwin(); // reset ncurses settings; restore the terminal to its default state
     clear_screen();
+    gameover(&game); // display statistics before returning to the main menu
+}
+
+// display statistics before returning to the menu
+void gameover(stateGame *game){
+    printf("%sGame over!%s\n", RED, RESET_COLOR);
+    printf("Your game results:\n");
+    printf("1. Score: %s%d%s\n", GREEN, game->score_, RESET_COLOR);
+    printf("2. Size snake: %s%d%s\n", GREEN, game->state_snake_.sizeSnake_, RESET_COLOR);
+
+    if(game->state_snake_.sizeSnake_ == 1280){
+        printf("How did you manage that? Well done!\n");
+    }
 }
 
 // initialisation of the game's starting state
-void initGame(stateGame *state_game){
-    memset(state_game, 0, sizeof(stateGame));
+void initGame(stateGame *game){
+    // clearing the structure, setting all fields to zero 
+    memset(game, 0, sizeof(stateGame));
 
-    state_game->uad_ = RIGHT;
+    // initialization of the generator
+    rngSeed(&game->r_, (uint32_t)time(NULL));
 
     setupTerminal();
+    timeout(VALUETIMEOUT);
 
-    rngSeed(&state_game->r_, (uint32_t)time(NULL));
+    initMap(&game->m_);
 
-    mapInitialisation(&state_game->m_);
+    game->user_action_dir_ = RIGHT;
+    game->start_snake_pos_.startSnakeX_ = 15;
+    game->start_snake_pos_.startSnakeY_ = 15;
+    initSnake(&game->state_snake_, &game->start_snake_pos_);
 
-    state_game->ssp_.startSnakeX_ = 15;
-    state_game->ssp_.startSnakeY_ = 15;
-    initSnake(&state_game->ss_, &state_game->ssp_);
-
-    state_game->score_ = 0;
-    state_game->gameover_ = false;
+    game->score_ = 0;
+    game->gameover_ = false;
 }
 
-// checking whether the snake has collided with the wall
-bool checkCollidedSnakeWall(stateGame *state_game){
-    uint8_t headSnakeX = state_game->ss_.snakeX_[0];
-    uint8_t headSnakeY = state_game->ss_.snakeY_[0];
+// checking whether the snake collides with anything
+bool checkCollidedSnakeWall(stateGame *game){
+    uint8_t headSnakeX = game->state_snake_.snakeX_[0];
+    uint8_t headSnakeY = game->state_snake_.snakeY_[0];
+    return game->m_.map_[headSnakeY][headSnakeX] == 1;
+}
 
-    if(state_game->m_.map_[headSnakeY][headSnakeX] == 1){
-        return true;
+bool checkCollidedSnakeFood(stateGame *game){
+    return game->state_snake_.snakeX_[0] == game->food_pos_.foodX_ && game->state_snake_.snakeY_[0] == game->food_pos_.foodY_;
+}
+
+bool checkCollidedSnakeHeadBody(stateSnake *snake){
+    uint8_t headSnakeX = snake->snakeX_[0];
+    uint8_t headSnakeY = snake->snakeY_[0];
+    for(uint16_t i = 1; i < snake->sizeSnake_; i++){
+        if(snake->snakeX_[i] == headSnakeX && snake->snakeY_[i] == headSnakeY){
+            return true;
+        }
     }
-
     return false;
+}
+
+foodPosition checkSpawnFoodSnakeBody(stateGame *game, stateSnake *snake){
+    bool valid;
+    foodPosition food;
+
+    do{
+        valid = true;
+
+        food = spawnFood(&game->r_, MIN_Y, MAX_Y, MIN_X, MAX_X);
+
+        for(uint16_t i = 0; i < game->state_snake_.sizeSnake_; i++){
+            if(snake->snakeX_[i] == food.foodX_ && snake->snakeY_[i] == food.foodY_){
+                valid = false;
+                break;
+            }
+        }
+    } while(!valid);
+
+    return food;
+}
+
+// statistical output
+void displayScore(stateGame *game){
+    mvprintw(25, 0, "Score: %d\n", game->score_);
+}
+
+void displaySizeSnake(stateGame *game){
+    mvprintw(26, 0, "Size snake: %d\n", game->state_snake_.sizeSnake_);
 }
